@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { anyNonNil as isUUId } from "is-uuid";
 import { type Todo } from "../entities/todo.entity";
-import { zodParseToResult } from "../../../app/utils/parsers/zod-parse-to-result";
 
 const TodoSchema = z
   .object({
@@ -31,4 +30,6 @@ const TodoSchema = z
   })
   .readonly() satisfies z.ZodType<Todo, any, any>;
 
-export const parseTodo = zodParseToResult(TodoSchema.parse);
+export function parseTodo(value: unknown): Todo {
+  return TodoSchema.parse(value);
+}

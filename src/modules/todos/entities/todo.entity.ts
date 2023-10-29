@@ -1,5 +1,4 @@
-import { type Result, err } from "neverthrow";
-import { type ZodError } from "zod";
+import { type Either, left, right } from "fp-ts/lib/Either";
 import { parseTodo } from "../utils/parsers";
 
 export type Todo = Readonly<{
@@ -16,21 +15,18 @@ export function create(data: {
   description: string | null;
   createdAt: Date | string;
   completedAt: Date | string | null;
-}): Result<Todo, ZodError> {
+}): Todo {
   return parseTodo(data);
 }
 
-export function setTitle(todo: Todo, title: string): Result<Todo, ZodError> {
+export function setTitle(todo: Todo, title: string): Todo {
   return create({
     ...todo,
     title,
   });
 }
 
-export function setDescription(
-  todo: Todo,
-  description: string | null,
-): Result<Todo, ZodError> {
+export function setDescription(todo: Todo, description: string | null): Todo {
   return create({
     ...todo,
     description,
@@ -40,19 +36,21 @@ export function setDescription(
 export function setCompletedAt(
   todo: Todo,
   completedAt: string | null,
-): Result<Todo, "ALREADY_COMPLETED" | ZodError> {
+): Either<"ALREADY_COMPLETED", Todo> {
   if (typeof completedAt === "string" && todo.completedAt !== null) {
     // Error - todo is already set as completed
-    return err("ALREADY_COMPLETED" as const);
+    return left("ALREADY_COMPLETED" as const);
   }
 
-  return create({
-    ...todo,
-    completedAt,
-  });
+  return right(
+    create({
+      ...todo,
+      completedAt,
+    }),
+  );
 }
 
-export function toggleCompleted(todo: Todo): Result<Todo, ZodError> {
+export function toggleCompleted(todo: Todo): Todo {
   const completedAt =
     todo.completedAt === null ? new Date().toISOString() : null;
 
