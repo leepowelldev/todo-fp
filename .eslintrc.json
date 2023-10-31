@@ -22,6 +22,7 @@
       { "default": "generic", "readonly": "generic" }
     ],
     "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-    "import/order": "error"
+    "import/order": "error",
+    "import/no-unresolved": ["error", { "ignore": ["bun:test"] }]
   }
 }

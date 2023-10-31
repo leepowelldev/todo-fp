@@ -1,24 +1,20 @@
-import { Result, type ResultAsync, ok } from "neverthrow";
+import { type ResultAsync, ok } from "neverthrow";
 import {
   type DataSourceError,
   type TodoDataSource,
 } from "../data-sources/todo.data-source";
 import { type Todo } from "../entities/todo.entity";
+import { type CreateTodoDTO } from "../dtos/create-todo.dto";
 import { parseTodo } from "../utils/parsers";
 
-export type TodoRepositoryError =
-  | {
-      type: "TODO_REPOSITORY_CREATE_ENTITY_FAILED";
-      error?: Error;
-    }
-  | DataSourceError;
+export type TodoRepositoryError = DataSourceError;
 
 export type TodoRepository = {
-  findAll(): ResultAsync<ReadonlyArray<Todo>, Error>;
-  findOne(id: string): ResultAsync<Todo | null, Error>;
-  // create(): ResultAsync<Todo, Error>;
-  // update(): ResultAsync<Todo, Error>;
-  // delete(): ResultAsync<Todo, Error>;
+  findAll(): ResultAsync<ReadonlyArray<Todo>, TodoRepositoryError>;
+  findOne(id: string): ResultAsync<Todo | null, TodoRepositoryError>;
+  create(data: CreateTodoDTO): ResultAsync<Todo, TodoRepositoryError>;
+  // update(): ResultAsync<Todo, TodoRepositoryError>;
+  // delete(): ResultAsync<Todo, TodoRepositoryError>;
 };
 
 export function findAll(
@@ -26,31 +22,26 @@ export function findAll(
 ): ResultAsync<ReadonlyArray<Todo>, TodoRepositoryError> {
   return dataSource
     .findAll()
-    .andThen((todoDOs) => {
-      const parsedTodos = todoDOs.map((todoDO) => parseTodo(todoDO));
-      return Result.combine(parsedTodos);
-    })
-    .mapErr((error) => {
-      if (error.type === "PARSE_ERROR") {
-        return {
-          type: "TODO_REPOSITORY_CREATE_ENTITY_FAILED",
-          error: error.error,
-        };
-      }
-      return error;
-    });
+    .andThen((todoDOs) => ok(todoDOs.map((todoDO) => parseTodo(todoDO))));
 }
 
 export function findOne(
   dataSource: TodoDataSource,
   id: string,
-): ResultAsync<Todo | null, Error> {
+): ResultAsync<Todo | null, TodoRepositoryError> {
   return dataSource.findOne(id).andThen((todoDO) => {
     if (todoDO !== null) {
-      return parseTodo(todoDO);
+      return ok(parseTodo(todoDO));
     }
     return ok(null);
   });
+}
+
+export function create(
+  dataSource: TodoDataSource,
+  data: CreateTodoDTO,
+): ResultAsync<Todo, TodoRepositoryError> {
+  return dataSource.create(data).andThen((todoDO) => ok(parseTodo(todoDO)));
 }
 
 export function createTodoRepository(
@@ -59,5 +50,6 @@ export function createTodoRepository(
   return {
     findAll: () => findAll(dataSource),
     findOne: (id: string) => findOne(dataSource, id),
+    create: (data: CreateTodoDTO) => create(dataSource, data),
   };
 }

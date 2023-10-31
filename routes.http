@@ -1,0 +1,44 @@
+GET http://localhost:9001/ HTTP/1.1
+
+###
+
+POST http://localhost:9001/ HTTP/1.1
+content-type: application/json
+
+{
+  "title": "Get dry cleaning2"
+}
+
+###
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
+
+### Not Found
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff598 HTTP/1.1
+
+### Not Acceptable
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
+accept: text/html
+
+### Unsupported Media Type
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
+content-type: text/html
+
+###
+
+PATCH http://localhost:9001/api/todos/bc99130b-b71e-4d84-86a9-1183aab4c51d HTTP/1.1
+content-type: application/json
+
+{
+  "title": "foo",
+  "description": null,
+  "completedAt": null
+}
+
+###
+
+DELETE  http://localhost:9001/api/todos/bc99130b-b71e-4d84-86a9-1183aab4c51d HTTP/1.1
+content-type: application/json

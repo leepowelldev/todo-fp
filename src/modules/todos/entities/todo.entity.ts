@@ -1,5 +1,3 @@
-import { type Result, err } from "neverthrow";
-import { type ZodError } from "zod";
 import { parseTodo } from "../utils/parsers";
 
 export type Todo = Readonly<{
@@ -16,48 +14,51 @@ export function create(data: {
   description: string | null;
   createdAt: Date | string;
   completedAt: Date | string | null;
-}): Result<Todo, ZodError> {
+}): Todo {
   return parseTodo(data);
 }
 
-export function setTitle(todo: Todo, title: string): Result<Todo, ZodError> {
-  return create({
+export function setTitle(todo: Todo, title: string): Todo {
+  return {
     ...todo,
     title,
-  });
+  };
 }
 
-export function setDescription(
-  todo: Todo,
-  description: string | null,
-): Result<Todo, ZodError> {
-  return create({
+export function setDescription(todo: Todo, description: string | null): Todo {
+  return {
     ...todo,
     description,
-  });
+  };
 }
 
-export function setCompletedAt(
-  todo: Todo,
-  completedAt: string | null,
-): Result<Todo, "ALREADY_COMPLETED" | ZodError> {
-  if (typeof completedAt === "string" && todo.completedAt !== null) {
-    // Error - todo is already set as completed
-    return err("ALREADY_COMPLETED" as const);
+export function setCompleted(todo: Todo): Todo {
+  if (isCompleted(todo)) {
+    return todo;
   }
-
-  return create({
+  return {
     ...todo,
-    completedAt,
-  });
+    completedAt: new Date().toISOString(),
+  };
 }
 
-export function toggleCompleted(todo: Todo): Result<Todo, ZodError> {
-  const completedAt =
-    todo.completedAt === null ? new Date().toISOString() : null;
-
-  return create({
+export function setNotCompleted(todo: Todo): Todo {
+  if (!isCompleted(todo)) {
+    return todo;
+  }
+  return {
     ...todo,
-    completedAt,
-  });
+    completedAt: null,
+  };
+}
+
+export function toggleCompleted(todo: Todo): Todo {
+  if (todo.completedAt === null) {
+    return setCompleted(todo);
+  }
+  return setNotCompleted(todo);
+}
+
+export function isCompleted(todo: Todo): boolean {
+  return todo.completedAt !== null;
 }

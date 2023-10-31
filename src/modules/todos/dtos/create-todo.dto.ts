@@ -1,5 +1,5 @@
-export type CreateTodoDIO = Readonly<{
+export type CreateTodoDTO = Readonly<{
   title: string;
-  description?: string;
-  completedAt?: string;
+  description?: string | null;
+  completedAt?: string | null;
 }>;
