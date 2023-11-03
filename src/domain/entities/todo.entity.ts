@@ -1,4 +1,4 @@
-import { parseTodo } from "../utils/parsers";
+import { parseTodo } from "../../shared/parsers";
 
 export type Todo = Readonly<{
   id: string;

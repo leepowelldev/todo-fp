@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { type CreateTodoDTO } from "../dtos/create-todo.dto";
-import { type Todo } from "../entities/todo.entity";
-import { type UpdateTodoDTO } from "../dtos/update-todo.dto";
+import { type Todo } from "../domain/entities/todo.entity";
+import { type CreateTodoDTO } from "../infra/dtos/create-todo.dto";
+import { type UpdateTodoDTO } from "../infra/dtos/update-todo.dto";
 
 export const TodoSchema = z.object({
   id: z.string().trim().uuid(),

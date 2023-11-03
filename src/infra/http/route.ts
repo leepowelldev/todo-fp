@@ -11,8 +11,8 @@ export function route(controller: Controller): RequestHandler {
   return async (request: Request, response: Response, next: NextFunction) => {
     try {
       await controller(request, response, next);
-    } catch (caught) {
-      next(caught);
+    } catch (error) {
+      next(error);
     }
   };
 }

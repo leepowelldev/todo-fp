@@ -8,7 +8,7 @@ import {
   update,
   remove,
 } from "../todo.data-source";
-import { client } from "../../../../infra/database/client";
+import { client } from "../../database/client";
 
 const data = [
   {

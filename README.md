@@ -50,7 +50,7 @@ A DTO should only be used in two places: where data enters the application or wh
   For queries the situation is similar. Here we can use a DTO to represent the query result. As an example we can pass a DTO to a template to render a view based on it. We can use a DTO, serialize it to JSON and send it back as an API response.
 - When we send an HTTP GET request to a web service, we may deserialize the API response into a DTO first, so we can apply a known schema to it instead of just accessing array keys and guessing the types. API client packages usually offer DTOs for requests and responses.
 
-## A DTO:
+Define the DTO to the layer where the source of the values comes from. (https://stackoverflow.com/a/31445699)
 
 - Declares and enforces a schema for data: names and types
 - Offers no guarantees about correctness of values

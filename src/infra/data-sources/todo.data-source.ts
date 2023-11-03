@@ -1,14 +1,15 @@
 import { type PrismaClient } from "@prisma/client";
 import { type ResultAsync } from "neverthrow";
-import { prismaQueryToResult } from "../../../infra/database/utils/prisma-query-to-result";
+import { prismaQueryToResult } from "../database/utils/prisma-query-to-result";
 import { type CreateTodoDTO } from "../dtos/create-todo.dto";
 import { type TodoDataSourceDTO } from "../dtos/todo-data-source.dto";
 import { type UpdateTodoDTO } from "../dtos/update-todo.dto";
+import { type ResultError } from "../../shared/errors/result-error";
 
 export type DataSourceError =
-  | "DATA_SOURCE_NOT_FOUND_ERROR"
-  | "DATA_SOURCE_CONFLICT_ERROR"
-  | "DATA_SOURCE_QUERY_ERROR";
+  | ResultError<"DATA_SOURCE_NOT_FOUND_ERROR">
+  | ResultError<"DATA_SOURCE_CONFLICT_ERROR">
+  | ResultError<"DATA_SOURCE_QUERY_ERROR">;
 
 export type TodoDataSource = {
   findAll(): ResultAsync<ReadonlyArray<TodoDataSourceDTO>, DataSourceError>;
