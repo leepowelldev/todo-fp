@@ -1,5 +1,4 @@
 import { describe, beforeEach, expect, it } from "bun:test";
-import { type Ok } from "neverthrow";
 import {
   createPrismaTodoDataSource,
   findOne,

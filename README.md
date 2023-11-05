@@ -69,3 +69,8 @@ https://matthiasnoback.nl/2021/02/does-it-belong-in-the-application-or-domain-la
 # Services
 
 Used for dealing with third parties
+
+## Errors
+
+https://davetayls.me/blog/2018-06-09-fp-ts-02-handling-error-cases
+https://dev.to/vncz/forewords-and-domain-model-1p13

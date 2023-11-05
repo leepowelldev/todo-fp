@@ -31,6 +31,7 @@ export const CreateTodoDTOSchema = z
     description: TodoSchema.shape.description.optional(),
     completedAt: TodoSchema.shape.completedAt.optional(),
   })
+  .strict()
   .readonly() satisfies z.ZodType<CreateTodoDTO, any, any>;
 
 export const UpdateTodoDTOSchema = z
@@ -39,4 +40,7 @@ export const UpdateTodoDTOSchema = z
     description: TodoSchema.shape.description.optional(),
     completedAt: TodoSchema.shape.completedAt.optional(),
   })
+  .strict()
   .readonly() satisfies z.ZodType<UpdateTodoDTO, any, any>;
+
+export const TodoResponseDTOSchema = TodoSchema;

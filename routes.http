@@ -1,35 +1,46 @@
+### FIND ALL
+
 GET http://localhost:9001/ HTTP/1.1
 
-###
+### FIND ONE
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+
+### NOT FOUND
+
+GET http://localhost:9001/cff442b9-d91a-4c41-b746-5d051c88c971 HTTP/1.1
+
+### NOT ACCEPTABLE
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+accept: text/html
+
+### UNSUPPORTED MEDIA TYPE
+
+GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+content-type: text/html
+
+### CREATE
 
 POST http://localhost:9001/ HTTP/1.1
 content-type: application/json
 
 {
-  "title": "Get dry cleaning2"
+  "title": "Get dry cleaning"
 }
 
-###
+### BAD CREATE
 
-GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
+POST http://localhost:9001/ HTTP/1.1
+content-type: application/json
 
-### Not Found
+{
+  "titles": "Get dry cleaning"
+}
 
-GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff598 HTTP/1.1
+### UPDATE
 
-### Not Acceptable
-
-GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
-accept: text/html
-
-### Unsupported Media Type
-
-GET http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
-content-type: text/html
-
-###
-
-PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff599 HTTP/1.1
+PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
 content-type: application/json
 
 {
@@ -38,7 +49,29 @@ content-type: application/json
   "completedAt": null
 }
 
-###
+### BAD UPDATE
 
-DELETE  http://localhost:9001/api/todos/bc99130b-b71e-4d84-86a9-1183aab4c51d HTTP/1.1
+PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+content-type: application/json
+
+{
+  "titles": "foo",
+  "description": null,
+  "completedAt": null
+}
+
+### NOT FOUND UPDATE
+
+PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+content-type: application/json
+
+{
+  "title": "foo",
+  "description": null,
+  "completedAt": null
+}
+
+### REMOVE
+
+DELETE  http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
 content-type: application/json

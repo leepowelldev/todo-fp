@@ -1,99 +1,77 @@
 import { type PrismaClient } from "@prisma/client";
-import { type ResultAsync } from "neverthrow";
-import { prismaQueryToResult } from "../database/utils/prisma-query-to-result";
 import { type CreateTodoDTO } from "../dtos/create-todo.dto";
 import { type TodoDataSourceDTO } from "../dtos/todo-data-source.dto";
 import { type UpdateTodoDTO } from "../dtos/update-todo.dto";
-import { type ResultError } from "../../shared/errors/result-error";
-
-export type DataSourceError =
-  | ResultError<"DATA_SOURCE_NOT_FOUND_ERROR">
-  | ResultError<"DATA_SOURCE_CONFLICT_ERROR">
-  | ResultError<"DATA_SOURCE_QUERY_ERROR">;
 
 export type TodoDataSource = {
-  findAll(): ResultAsync<ReadonlyArray<TodoDataSourceDTO>, DataSourceError>;
-  findOne(id: string): ResultAsync<TodoDataSourceDTO | null, DataSourceError>;
-  create(data: CreateTodoDTO): ResultAsync<TodoDataSourceDTO, DataSourceError>;
-  update(
-    id: string,
-    data: UpdateTodoDTO,
-  ): ResultAsync<TodoDataSourceDTO, DataSourceError>;
-  remove(id: string): ResultAsync<TodoDataSourceDTO, DataSourceError>;
+  findAll(): Promise<ReadonlyArray<TodoDataSourceDTO>>;
+  findOne(id: string): Promise<TodoDataSourceDTO | null>;
+  create(data: CreateTodoDTO): Promise<TodoDataSourceDTO>;
+  update(id: string, data: UpdateTodoDTO): Promise<TodoDataSourceDTO>;
+  remove(id: string): Promise<TodoDataSourceDTO>;
 };
 
 type TodoPrismaClient = PrismaClient["todo"];
 
-export function findAll(
+export async function findAll(
   client: TodoPrismaClient,
-): ResultAsync<ReadonlyArray<TodoDataSourceDTO>, DataSourceError> {
-  return prismaQueryToResult(async () => await client.findMany());
+): Promise<ReadonlyArray<TodoDataSourceDTO>> {
+  return await client.findMany();
 }
 
-export function findOne(
+export async function findOne(
   client: TodoPrismaClient,
   id: string,
-): ResultAsync<TodoDataSourceDTO | null, DataSourceError> {
-  return prismaQueryToResult(
-    async () =>
-      await client.findUnique({
-        where: {
-          id,
-        },
-      }),
-  );
+): Promise<TodoDataSourceDTO | null> {
+  return await client.findUnique({
+    where: {
+      id,
+    },
+  });
 }
 
-export function create(
+export async function create(
   client: TodoPrismaClient,
   data: CreateTodoDTO,
-): ResultAsync<TodoDataSourceDTO, DataSourceError> {
-  return prismaQueryToResult(
-    async () =>
-      await client.create({
-        data,
-      }),
-  );
+): Promise<TodoDataSourceDTO> {
+  return await client.create({
+    data,
+  });
 }
 
-export function update(
+export async function update(
   client: TodoPrismaClient,
   id: string,
   data: UpdateTodoDTO,
-): ResultAsync<TodoDataSourceDTO, DataSourceError> {
-  return prismaQueryToResult(
-    async () =>
-      await client.update({
-        where: {
-          id,
-        },
-        data,
-      }),
-  );
+): Promise<TodoDataSourceDTO> {
+  return await client.update({
+    where: {
+      id,
+    },
+    data,
+  });
 }
 
-export function remove(
+export async function remove(
   client: TodoPrismaClient,
   id: string,
-): ResultAsync<TodoDataSourceDTO, DataSourceError> {
-  return prismaQueryToResult(
-    async () =>
-      await client.delete({
-        where: {
-          id,
-        },
-      }),
-  );
+): Promise<TodoDataSourceDTO> {
+  return await client.delete({
+    where: {
+      id,
+    },
+  });
 }
 
 export function createPrismaTodoDataSource(
   client: TodoPrismaClient,
 ): TodoDataSource {
   return {
-    findAll: () => findAll(client),
-    findOne: (id: string) => findOne(client, id),
-    create: (data: CreateTodoDTO) => create(client, data),
-    update: (id: string, data: UpdateTodoDTO) => update(client, id, data),
-    remove: (id: string) => remove(client, id),
+    findAll: async () => await findAll(client),
+    findOne: async (id: string) => await findOne(client, id),
+    create: async (data: CreateTodoDTO) => await create(client, data),
+    update: async (id: string, data: UpdateTodoDTO) =>
+      await update(client, id, data),
+    remove: async (id: string) => await remove(client, id),
   };
 }

@@ -1,95 +1,63 @@
-import { type ResultAsync, ok } from "neverthrow";
-import {
-  type DataSourceError,
-  type TodoDataSource,
-} from "../data-sources/todo.data-source";
+import { type TodoDataSource } from "../data-sources/todo.data-source";
 import { type Todo } from "../../domain/entities/todo.entity";
 import { type CreateTodoDTO } from "../dtos/create-todo.dto";
 import { parseTodo } from "../../shared/parsers";
-import {
-  type TodoRepository,
-  type TodoRepositoryError,
-} from "../../domain/repos/todo.repo";
+import { type TodoRepository } from "../../domain/repos/todo.repo";
 import { type UpdateTodoDTO } from "../dtos/update-todo.dto";
-import { createResultError } from "../../shared/errors/result-error";
 
-function mapError(error: DataSourceError): TodoRepositoryError {
-  switch (error.name) {
-    case "DATA_SOURCE_CONFLICT_ERROR": {
-      return createResultError("REPOSITORY_CONFLICT_ERROR", error.error);
-    }
-    case "DATA_SOURCE_NOT_FOUND_ERROR": {
-      return createResultError("REPOSITORY_NOT_FOUND_ERROR", error.error);
-    }
-    case "DATA_SOURCE_QUERY_ERROR": {
-      return createResultError("REPOSITORY_QUERY_ERROR", error.error);
-    }
-  }
-}
-
-export function findAll(
+export async function findAll(
   dataSource: TodoDataSource,
-): ResultAsync<ReadonlyArray<Todo>, TodoRepositoryError> {
-  return dataSource
-    .findAll()
-    .andThen((todoDTOs) => ok(todoDTOs.map((todoDTO) => parseTodo(todoDTO))))
-    .mapErr(mapError);
+): Promise<ReadonlyArray<Todo>> {
+  return (await dataSource.findAll()).map((todoDTO) => parseTodo(todoDTO));
 }
 
-export function findOne(
+export async function findOne(
   dataSource: TodoDataSource,
   id: string,
-): ResultAsync<Todo | null, TodoRepositoryError> {
-  return dataSource
-    .findOne(id)
-    .andThen((todoDTO) => {
-      if (todoDTO !== null) {
-        return ok(parseTodo(todoDTO));
-      }
-      return ok(null);
-    })
-    .mapErr(mapError);
+): Promise<Todo | null> {
+  const todoDTO = await dataSource.findOne(id);
+
+  if (todoDTO === null) {
+    return null;
+  }
+
+  return parseTodo(todoDTO);
 }
 
-export function create(
+export async function create(
   dataSource: TodoDataSource,
   data: CreateTodoDTO,
-): ResultAsync<Todo, TodoRepositoryError> {
-  return dataSource
-    .create(data)
-    .andThen((todoDTO) => ok(parseTodo(todoDTO)))
-    .mapErr(mapError);
+): Promise<Todo> {
+  const todoDTO = await dataSource.create(data);
+  return parseTodo(todoDTO);
 }
 
-export function update(
+export async function update(
   dataSource: TodoDataSource,
   id: string,
   data: UpdateTodoDTO,
-): ResultAsync<Todo, TodoRepositoryError> {
-  return dataSource
-    .update(id, data)
-    .andThen((todoDTO) => ok(parseTodo(todoDTO)))
-    .mapErr(mapError);
+): Promise<Todo> {
+  const todoDTO = await dataSource.update(id, data);
+  return parseTodo(todoDTO);
 }
 
-export function remove(
+export async function remove(
   dataSource: TodoDataSource,
   id: string,
-): ResultAsync<Todo, TodoRepositoryError> {
-  return dataSource
-    .remove(id)
-    .andThen((todoDTO) => ok(parseTodo(todoDTO)))
-    .mapErr(mapError);
+): Promise<Todo> {
+  const todoDTO = await dataSource.remove(id);
+  return parseTodo(todoDTO);
 }
 
 export function createTodoRepository(
   dataSource: TodoDataSource,
 ): TodoRepository {
   return {
-    findAll: () => findAll(dataSource),
-    findOne: (id: string) => findOne(dataSource, id),
-    create: (data: CreateTodoDTO) => create(dataSource, data),
-    update: (id: string, data: UpdateTodoDTO) => update(dataSource, id, data),
-    remove: (id: string) => remove(dataSource, id),
+    findAll: async () => await findAll(dataSource),
+    findOne: async (id: string) => await findOne(dataSource, id),
+    create: async (data: CreateTodoDTO) => await create(dataSource, data),
+    update: async (id: string, data: UpdateTodoDTO) =>
+      await update(dataSource, id, data),
+    remove: async (id: string) => await remove(dataSource, id),
   };
 }
