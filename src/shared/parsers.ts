@@ -1,4 +1,4 @@
-import { type ParseParams, type z } from "zod";
+import { type ZodError, type ParseParams, type z } from "zod";
 import * as Either from "fp-ts/Either";
 import * as Option from "fp-ts/Option";
 import {
@@ -10,6 +10,16 @@ import {
 
 export class ParseError extends Error {
   readonly name = "ParseError";
+  readonly cause: ZodError | undefined;
+  constructor(
+    message?: string,
+    options?: {
+      cause?: ZodError;
+    },
+  ) {
+    super(message, options);
+    this.cause = options?.cause;
+  }
 }
 
 function zodParseToEither<T extends z.ZodType>(
@@ -21,7 +31,8 @@ function zodParseToEither<T extends z.ZodType>(
 ) => Either.Either<ParseError, ReturnType<(typeof parser)["parse"]>> {
   return Either.tryCatchK(
     parser.parse,
-    (error) => new ParseError(message ?? "Parse error", { cause: error }),
+    (error) =>
+      new ParseError(message ?? "Parse error", { cause: error as ZodError }),
   );
 }
 
@@ -81,3 +92,10 @@ export const tryParseUpdateTodoDTO = zodParseToOption(UpdateTodoDTOSchema);
 /* -------------------------------------------------------------------------- */
 
 export const parseTodoResponseDTO = TodoResponseDTOSchema.parse;
+
+export const safeParseTodoResponseDTO = zodParseToEither(
+  TodoResponseDTOSchema,
+  "Parsing TodoResponseDTO error",
+);
+
+export const tryParseTodoResponseDTO = zodParseToOption(TodoResponseDTOSchema);

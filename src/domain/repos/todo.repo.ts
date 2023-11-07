@@ -1,15 +1,38 @@
 import type * as TaskEither from "fp-ts/TaskEither";
-import type * as Option from "fp-ts/Option";
 import { type Todo } from "../entities/todo.entity";
 import { type CreateTodoDTO } from "../../infra/dtos/create-todo.dto";
 import { type UpdateTodoDTO } from "../../infra/dtos/update-todo.dto";
+import { type TodoDataSourceError } from "../../infra/data-sources/todo.data-source";
 
-export type TodoNotFoundError = { type: "TODO_NOT_FOUND"; id: string };
+export class TodoRepositoryError extends Error {
+  readonly name = "TodoRepositoryError";
+  readonly type = "PARSE_ERROR";
+  constructor(
+    message: string,
+    type: TodoRepositoryError["type"],
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.type = type;
+  }
+}
 
 export type TodoRepository = {
-  findAll(): TaskEither.TaskEither<Error, ReadonlyArray<Todo>>;
-  findOne(id: string): TaskEither.TaskEither<Error, Option.Option<Todo>>;
-  create(data: CreateTodoDTO): TaskEither.TaskEither<Error, Todo>;
-  update(id: string, data: UpdateTodoDTO): TaskEither.TaskEither<Error, Todo>;
-  remove(id: string): TaskEither.TaskEither<Error, Todo>;
+  findAll(): TaskEither.TaskEither<
+    TodoRepositoryError | TodoDataSourceError,
+    ReadonlyArray<Todo>
+  >;
+  findOne(
+    id: string,
+  ): TaskEither.TaskEither<TodoRepositoryError | TodoDataSourceError, Todo>;
+  create(
+    data: CreateTodoDTO,
+  ): TaskEither.TaskEither<TodoRepositoryError | TodoDataSourceError, Todo>;
+  update(
+    id: string,
+    data: UpdateTodoDTO,
+  ): TaskEither.TaskEither<TodoRepositoryError | TodoDataSourceError, Todo>;
+  remove(
+    id: string,
+  ): TaskEither.TaskEither<TodoRepositoryError | TodoDataSourceError, Todo>;
 };

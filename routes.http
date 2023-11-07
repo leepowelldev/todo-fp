@@ -55,6 +55,7 @@ PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
 content-type: application/json
 
 {
+  "id": "abc",
   "titles": "foo",
   "description": null,
   "completedAt": null
@@ -62,7 +63,7 @@ content-type: application/json
 
 ### NOT FOUND UPDATE
 
-PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+PATCH http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff592 HTTP/1.1
 content-type: application/json
 
 {
@@ -74,4 +75,9 @@ content-type: application/json
 ### REMOVE
 
 DELETE  http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff591 HTTP/1.1
+content-type: application/json
+
+### NOT FOUND REMOVE
+
+DELETE  http://localhost:9001/cf13b3f7-b7ae-4a1a-92f4-4a2c85aff592 HTTP/1.1
 content-type: application/json
