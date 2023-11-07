@@ -8,16 +8,21 @@ import {
   UpdateTodoDTOSchema,
 } from "./schemas";
 
+export class ParseError extends Error {
+  readonly name = "ParseError";
+}
+
 function zodParseToEither<T extends z.ZodType>(
   parser: T,
+  message?: string,
 ): (
   data: unknown,
   params?: Partial<z.ParseParams> | undefined,
-) => Either.Either<
-  z.ZodError<z.input<T>>,
-  ReturnType<(typeof parser)["parse"]>
-> {
-  return Either.tryCatchK(parser.parse, (e) => e as z.ZodError<z.input<T>>);
+) => Either.Either<ParseError, ReturnType<(typeof parser)["parse"]>> {
+  return Either.tryCatchK(
+    parser.parse,
+    (error) => new ParseError(message ?? "Parse error", { cause: error }),
+  );
 }
 
 function zodParseToOption<T extends z.ZodType>(
@@ -37,7 +42,10 @@ function zodParseToOption<T extends z.ZodType>(
 export const parseTodo = TodoReadonlySchema.parse;
 
 // Returns Either
-export const safeParseTodo = zodParseToEither(TodoReadonlySchema);
+export const safeParseTodo = zodParseToEither(
+  TodoReadonlySchema,
+  "Parsing Todo error",
+);
 
 // Returns Option
 export const tryParseTodo = zodParseToOption(TodoReadonlySchema);
@@ -48,7 +56,10 @@ export const tryParseTodo = zodParseToOption(TodoReadonlySchema);
 
 export const parseCreateTodoDTO = CreateTodoDTOSchema.parse;
 
-export const safeParseCreateTodoDTO = zodParseToEither(CreateTodoDTOSchema);
+export const safeParseCreateTodoDTO = zodParseToEither(
+  CreateTodoDTOSchema,
+  "Parsing CreateTodoDTO error",
+);
 
 export const tryParseCreateTodoDTO = zodParseToOption(CreateTodoDTOSchema);
 
@@ -58,7 +69,10 @@ export const tryParseCreateTodoDTO = zodParseToOption(CreateTodoDTOSchema);
 
 export const parseUpdateTodoDTO = UpdateTodoDTOSchema.parse;
 
-export const safeParseUpdateTodoDTO = zodParseToEither(UpdateTodoDTOSchema);
+export const safeParseUpdateTodoDTO = zodParseToEither(
+  UpdateTodoDTOSchema,
+  "Parsing UpdateTodoDTO error",
+);
 
 export const tryParseUpdateTodoDTO = zodParseToOption(UpdateTodoDTOSchema);
 

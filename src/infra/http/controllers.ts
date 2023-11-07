@@ -51,7 +51,7 @@ export async function createTodoController(
     body,
     safeParseCreateTodoDTO,
     Either.match(
-      async (error) => {
+      async ({ error }) => {
         Respond.badRequest(response, error.errors);
       },
       async (todo) => {
@@ -77,7 +77,7 @@ export async function updateTodoController(
     body,
     safeParseUpdateTodoDTO,
     Either.match(
-      async (error) => {
+      async ({ error }) => {
         Respond.badRequest(response, error.errors);
       },
       async (todo) => {

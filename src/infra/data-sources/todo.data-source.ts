@@ -1,77 +1,111 @@
 import { type PrismaClient } from "@prisma/client";
+import * as TaskEither from "fp-ts/TaskEither";
+import * as Option from "fp-ts/Option";
 import { type CreateTodoDTO } from "../dtos/create-todo.dto";
 import { type TodoDataSourceDTO } from "../dtos/todo-data-source.dto";
 import { type UpdateTodoDTO } from "../dtos/update-todo.dto";
 
+export class DataSourceError extends Error {
+  readonly name = "DataSourceError";
+}
+
 export type TodoDataSource = {
-  findAll(): Promise<ReadonlyArray<TodoDataSourceDTO>>;
-  findOne(id: string): Promise<TodoDataSourceDTO | null>;
-  create(data: CreateTodoDTO): Promise<TodoDataSourceDTO>;
-  update(id: string, data: UpdateTodoDTO): Promise<TodoDataSourceDTO>;
-  remove(id: string): Promise<TodoDataSourceDTO>;
+  findAll(): TaskEither.TaskEither<
+    DataSourceError,
+    ReadonlyArray<TodoDataSourceDTO>
+  >;
+  findOne(
+    id: string,
+  ): TaskEither.TaskEither<Error, Option.Option<TodoDataSourceDTO>>;
+  create(data: CreateTodoDTO): TaskEither.TaskEither<Error, TodoDataSourceDTO>;
+  update(
+    id: string,
+    data: UpdateTodoDTO,
+  ): TaskEither.TaskEither<Error, TodoDataSourceDTO>;
+  remove(id: string): TaskEither.TaskEither<Error, TodoDataSourceDTO>;
 };
 
 type TodoPrismaClient = PrismaClient["todo"];
 
-export async function findAll(
+export function findAll(
   client: TodoPrismaClient,
-): Promise<ReadonlyArray<TodoDataSourceDTO>> {
-  return await client.findMany();
+): TaskEither.TaskEither<DataSourceError, ReadonlyArray<TodoDataSourceDTO>> {
+  return TaskEither.tryCatch(
+    async () => await client.findMany(),
+    (error) => new DataSourceError("findAll failed", { cause: error }),
+  );
 }
 
-export async function findOne(
+export function findOne(
   client: TodoPrismaClient,
   id: string,
-): Promise<TodoDataSourceDTO | null> {
-  return await client.findUnique({
-    where: {
-      id,
-    },
-  });
+): TaskEither.TaskEither<DataSourceError, Option.Option<TodoDataSourceDTO>> {
+  return TaskEither.tryCatch(
+    async () =>
+      Option.fromNullable(
+        await client.findUnique({
+          where: {
+            id,
+          },
+        }),
+      ),
+    (error) => new DataSourceError("findOne failed", { cause: error }),
+  );
 }
 
-export async function create(
+export function create(
   client: TodoPrismaClient,
   data: CreateTodoDTO,
-): Promise<TodoDataSourceDTO> {
-  return await client.create({
-    data,
-  });
+): TaskEither.TaskEither<DataSourceError, TodoDataSourceDTO> {
+  return TaskEither.tryCatch(
+    async () =>
+      await client.create({
+        data,
+      }),
+    (error) => new DataSourceError("create failed", { cause: error }),
+  );
 }
 
-export async function update(
+export function update(
   client: TodoPrismaClient,
   id: string,
   data: UpdateTodoDTO,
-): Promise<TodoDataSourceDTO> {
-  return await client.update({
-    where: {
-      id,
-    },
-    data,
-  });
+): TaskEither.TaskEither<DataSourceError, TodoDataSourceDTO> {
+  return TaskEither.tryCatch(
+    async () =>
+      await client.update({
+        where: {
+          id,
+        },
+        data,
+      }),
+    (error) => new DataSourceError("update failed", { cause: error }),
+  );
 }
 
-export async function remove(
+export function remove(
   client: TodoPrismaClient,
   id: string,
-): Promise<TodoDataSourceDTO> {
-  return await client.delete({
-    where: {
-      id,
-    },
-  });
+): TaskEither.TaskEither<DataSourceError, TodoDataSourceDTO> {
+  return TaskEither.tryCatch(
+    async () =>
+      await client.delete({
+        where: {
+          id,
+        },
+      }),
+    (error) => new DataSourceError("remove failed", { cause: error }),
+  );
 }
 
 export function createPrismaTodoDataSource(
   client: TodoPrismaClient,
 ): TodoDataSource {
   return {
-    findAll: async () => await findAll(client),
-    findOne: async (id: string) => await findOne(client, id),
-    create: async (data: CreateTodoDTO) => await create(client, data),
-    update: async (id: string, data: UpdateTodoDTO) =>
-      await update(client, id, data),
-    remove: async (id: string) => await remove(client, id),
+    findAll: () => findAll(client),
+    findOne: (id: string) => findOne(client, id),
+    create: (data: CreateTodoDTO) => create(client, data),
+    update: (id: string, data: UpdateTodoDTO) => update(client, id, data),
+    remove: (id: string) => remove(client, id),
   };
 }
