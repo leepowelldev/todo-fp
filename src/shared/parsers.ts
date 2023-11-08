@@ -1,6 +1,6 @@
 import { type ZodError, type ParseParams, type z } from "zod";
-import * as Either from "fp-ts/Either";
-import * as Option from "fp-ts/Option";
+import * as E from "fp-ts/Either";
+import * as O from "fp-ts/Option";
 import {
   CreateTodoDTOSchema,
   TodoReadonlySchema,
@@ -28,8 +28,8 @@ function zodParseToEither<T extends z.ZodType>(
 ): (
   data: unknown,
   params?: Partial<z.ParseParams> | undefined,
-) => Either.Either<ParseError, ReturnType<(typeof parser)["parse"]>> {
-  return Either.tryCatchK(
+) => E.Either<ParseError, ReturnType<(typeof parser)["parse"]>> {
+  return E.tryCatchK(
     parser.parse,
     (error) =>
       new ParseError(message ?? "Parse error", { cause: error as ZodError }),
@@ -41,8 +41,8 @@ function zodParseToOption<T extends z.ZodType>(
 ): (
   data: unknown,
   params?: Partial<z.ParseParams> | undefined,
-) => Option.Option<ReturnType<(typeof parser)["parse"]>> {
-  return Option.tryCatchK(parser.parse);
+) => O.Option<ReturnType<(typeof parser)["parse"]>> {
+  return O.tryCatchK(parser.parse);
 }
 
 /* -------------------------------------------------------------------------- */

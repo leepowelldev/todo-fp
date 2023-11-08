@@ -1,7 +1,9 @@
 import { type NextFunction, type Request, type Response } from "express";
 import * as E from "fp-ts/Either";
-import { pipe, flow } from "fp-ts/function";
+import * as TE from "fp-ts/TaskEither";
 import * as RA from "fp-ts/ReadonlyArray";
+import type * as T from "fp-ts/Task";
+import { pipe, flow } from "fp-ts/function";
 import { createTodoRepository } from "../repos/todo.repo";
 import {
   TodoDataSourceError,
@@ -17,8 +19,8 @@ import * as Respond from "./responses";
 
 function handleErrorOrSuccess(
   response: Response,
-): (ma: E.Either<unknown, unknown>) => void {
-  return E.match(
+): (ma: TE.TaskEither<unknown, unknown>) => T.Task<unknown> {
+  return TE.match(
     (error) => {
       if (error instanceof TodoDataSourceError) {
         switch (error.type) {
@@ -53,13 +55,12 @@ export async function getTodosController(
 ): Promise<void> {
   const dataSource = createPrismaTodoDataSource(client.todo);
   const repo = createTodoRepository(dataSource);
-  const result = await repo.findAll()();
 
-  pipe(
-    result,
-    E.flatMap(flow(RA.map(safeParseTodoResponseDTO), E.sequenceArray)),
+  await pipe(
+    repo.findAll(),
+    TE.flatMapEither(flow(RA.map(safeParseTodoResponseDTO), E.sequenceArray)),
     handleErrorOrSuccess(response),
-  );
+  )();
 }
 
 export async function getTodoController(
@@ -69,13 +70,12 @@ export async function getTodoController(
 ): Promise<void> {
   const dataSource = createPrismaTodoDataSource(client.todo);
   const repo = createTodoRepository(dataSource);
-  const result = await repo.findOne(request.params.id)();
 
-  pipe(
-    result,
-    E.flatMap(safeParseTodoResponseDTO),
+  await pipe(
+    repo.findOne(request.params.id),
+    TE.flatMapEither(safeParseTodoResponseDTO),
     handleErrorOrSuccess(response),
-  );
+  )();
 }
 
 export async function createTodoController(
@@ -85,23 +85,22 @@ export async function createTodoController(
 ): Promise<void> {
   const { body } = request;
 
-  await pipe(
+  pipe(
     body,
     safeParseCreateTodoDTO,
     E.match(
-      async (error) => {
+      (error) => {
         Respond.badRequest(response, error.cause?.errors);
       },
       async (createTodoDTO) => {
         const dataSource = createPrismaTodoDataSource(client.todo);
         const repo = createTodoRepository(dataSource);
-        const result = await repo.create(createTodoDTO)();
 
-        pipe(
-          result,
-          E.flatMap(safeParseTodoResponseDTO),
+        await pipe(
+          repo.create(createTodoDTO),
+          TE.flatMapEither(safeParseTodoResponseDTO),
           handleErrorOrSuccess(response),
-        );
+        )();
       },
     ),
   );
@@ -115,23 +114,22 @@ export async function updateTodoController(
   const { id } = request.params;
   const { body } = request;
 
-  await pipe(
+  pipe(
     body,
     safeParseUpdateTodoDTO,
     E.match(
-      async (error) => {
+      (error) => {
         Respond.badRequest(response, error.cause?.errors);
       },
-      async (todo) => {
+      async (updateTodoDTO) => {
         const dataSource = createPrismaTodoDataSource(client.todo);
         const repo = createTodoRepository(dataSource);
-        const result = await repo.update(id, todo)();
 
-        pipe(
-          result,
-          E.flatMap(safeParseTodoResponseDTO),
+        await pipe(
+          repo.update(id, updateTodoDTO),
+          TE.flatMapEither(safeParseTodoResponseDTO),
           handleErrorOrSuccess(response),
-        );
+        )();
       },
     ),
   );
@@ -145,11 +143,10 @@ export async function deleteTodoController(
   const { id } = request.params;
   const dataSource = createPrismaTodoDataSource(client.todo);
   const repo = createTodoRepository(dataSource);
-  const result = await repo.remove(id)();
 
-  pipe(
-    result,
-    E.flatMap(safeParseTodoResponseDTO),
+  await pipe(
+    repo.remove(id),
+    TE.flatMapEither(safeParseTodoResponseDTO),
     handleErrorOrSuccess(response),
-  );
+  )();
 }

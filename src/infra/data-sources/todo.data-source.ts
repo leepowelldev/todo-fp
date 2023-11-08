@@ -71,7 +71,10 @@ function mapError(message: string): (error: unknown) => TodoDataSourceError {
 export function findAll(
   client: TodoPrismaClient,
 ): ReturnType<TodoDataSource["findAll"]> {
-  return TaskEither.tryCatch(client.findMany, mapError("Failed to get todos"));
+  return TaskEither.tryCatch(
+    async () => await client.findMany(),
+    mapError("Failed to get todos"),
+  );
 }
 
 // export function findOne(
