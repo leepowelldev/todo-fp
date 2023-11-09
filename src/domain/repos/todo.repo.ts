@@ -6,10 +6,11 @@ import { type TodoDataSourceError } from "../../infra/data-sources/todo.data-sou
 
 export class TodoRepositoryError extends Error {
   readonly name = "TodoRepositoryError";
-  readonly type = "PARSE_ERROR";
+  readonly type: "PARSE_ERROR"; // Error parsing the data source response into a domain entity
+
   constructor(
-    message: string,
     type: TodoRepositoryError["type"],
+    message?: string,
     options?: ErrorOptions,
   ) {
     super(message, options);

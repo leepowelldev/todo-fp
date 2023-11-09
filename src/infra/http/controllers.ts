@@ -2,50 +2,49 @@ import { type NextFunction, type Request, type Response } from "express";
 import * as E from "fp-ts/Either";
 import * as TE from "fp-ts/TaskEither";
 import * as RA from "fp-ts/ReadonlyArray";
-import type * as T from "fp-ts/Task";
 import { pipe, flow } from "fp-ts/function";
 import { createTodoRepository } from "../repos/todo.repo";
 import {
-  TodoDataSourceError,
-  createPrismaTodoDataSource,
-} from "../data-sources/todo.data-source";
-import {
+  type ParseError,
   safeParseCreateTodoDTO,
   safeParseTodoResponseDTO,
   safeParseUpdateTodoDTO,
 } from "../../shared/parsers";
 import { client } from "../database/client";
+import { createPrismaTodoDataSource } from "../data-sources/prisma-todo.data-source";
+import { type TodoRepositoryError } from "../../domain/repos/todo.repo";
+import { TodoDataSourceError } from "../data-sources/todo.data-source";
 import * as Respond from "./responses";
 
-function handleErrorOrSuccess(
-  response: Response,
-): (ma: TE.TaskEither<unknown, unknown>) => T.Task<unknown> {
-  return TE.match(
-    (error) => {
-      if (error instanceof TodoDataSourceError) {
-        switch (error.type) {
-          case "NOT_FOUND": {
-            Respond.notFound(response);
-            break;
-          }
-          case "CONFLICT": {
-            Respond.conflict(response);
-            break;
-          }
-          case "BAD_REQUEST": {
-            Respond.badRequest(response);
-            break;
-          }
+function handleError(response: Response, next: NextFunction) {
+  return function innerHandleError(
+    error: ParseError | TodoRepositoryError | TodoDataSourceError,
+  ): void {
+    if (error instanceof TodoDataSourceError) {
+      switch (error.type) {
+        case "NOT_FOUND": {
+          Respond.notFound(response);
+          return;
+        }
+        case "CONFLICT": {
+          Respond.conflict(response);
+          return;
+        }
+        case "BAD_REQUEST": {
+          Respond.badRequest(response);
+          return;
         }
       }
+    }
 
-      console.log(error);
-      Respond.fail(response);
-    },
-    (todoResponseDTOs) => {
-      Respond.ok(response, todoResponseDTOs);
-    },
-  );
+    next(error);
+  };
+}
+
+function handleSuccess<T>(response: Response): (value: T) => void {
+  return function innerHandleSuccess(value: T) {
+    Respond.ok(response, value);
+  };
 }
 
 export async function getTodosController(
@@ -59,7 +58,7 @@ export async function getTodosController(
   await pipe(
     repo.findAll(),
     TE.flatMapEither(flow(RA.map(safeParseTodoResponseDTO), E.sequenceArray)),
-    handleErrorOrSuccess(response),
+    TE.match(handleError(response, next), handleSuccess(response)),
   )();
 }
 
@@ -74,7 +73,7 @@ export async function getTodoController(
   await pipe(
     repo.findOne(request.params.id),
     TE.flatMapEither(safeParseTodoResponseDTO),
-    handleErrorOrSuccess(response),
+    TE.match(handleError(response, next), handleSuccess(response)),
   )();
 }
 
@@ -99,7 +98,7 @@ export async function createTodoController(
         await pipe(
           repo.create(createTodoDTO),
           TE.flatMapEither(safeParseTodoResponseDTO),
-          handleErrorOrSuccess(response),
+          TE.match(handleError(response, next), handleSuccess(response)),
         )();
       },
     ),
@@ -128,7 +127,7 @@ export async function updateTodoController(
         await pipe(
           repo.update(id, updateTodoDTO),
           TE.flatMapEither(safeParseTodoResponseDTO),
-          handleErrorOrSuccess(response),
+          TE.match(handleError(response, next), handleSuccess(response)),
         )();
       },
     ),
@@ -147,6 +146,6 @@ export async function deleteTodoController(
   await pipe(
     repo.remove(id),
     TE.flatMapEither(safeParseTodoResponseDTO),
-    handleErrorOrSuccess(response),
+    TE.match(handleError(response, next), handleSuccess(response)),
   )();
 }
